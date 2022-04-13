@@ -20,7 +20,9 @@ export class storeAutoCompleteComponent implements OnInit {
         private storeService: StoreService,
         private translate: TranslateService) { }
 
-    ngOnInit() { }
+    ngOnInit() { 
+        // this.onSelectStore('DEFAULT')
+    }
 
     searchStore() {
         this.storeService.getListOfStores({ code: 'DEFAULT' })

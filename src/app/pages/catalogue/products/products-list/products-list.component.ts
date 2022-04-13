@@ -11,6 +11,7 @@ import { StorageService } from '../../../shared/services/storage.service';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { ListingService } from '../../../shared/services/listing.service';
+import { CrudService } from '../../../shared/services/crud.service';
 
 
 @Component({
@@ -39,6 +40,7 @@ export class ProductsListComponent implements OnInit {
 
   constructor(
     private userService: UserService,
+    private crudService: CrudService,
     private productService: ProductService,
     private dialogService: NbDialogService,
     private storeService: StoreService,
@@ -52,6 +54,13 @@ export class ProductsListComponent implements OnInit {
     this.listingService = new ListingService();
   }
 
+  showRemoteProducts(){
+    console.log("remote")
+    this.crudService.getRemoteProducts().subscribe(response=>{
+      console.log(response[0])
+    })
+  }
+    
   loadParams() {
     return {
       store: this.storageService.getMerchant(),

@@ -12,8 +12,13 @@ import { Country } from '../models/country';
 export class CrudService {
   url = environment.apiUrl;
   shippingUrl = environment.shippingApi;
+  myUrl = "http://192.168.0.228:8080/";
 
   constructor(private http: HttpClient) { }
+
+  getRemoteProducts(): Observable<any>{
+    return this.http.get(this.myUrl + "drzData/getProducts")
+  }
 
   getShipping(path, params?: { [param: string]: string | string[]; }): Observable<any> {
     return this.http.get(`${this.shippingUrl}${path}`, { responseType: 'json', params });
