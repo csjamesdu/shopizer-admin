@@ -11,7 +11,8 @@ export class ShowcaseDialogComponent {
 
   @Input() title: string;
   @Input() text: string;
-  @Input() actionText: string = this.translate.instant('COMMON.REMOVE_GEN_QUESTION');
+  @Input() actionText: string;
+  // @Input() actionText: string = this.translate.instant('COMMON.REMOVE_GEN_QUESTION');
 
   constructor(protected ref: NbDialogRef<ShowcaseDialogComponent>, private translate: TranslateService,) {}
 

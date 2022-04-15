@@ -1,23 +1,31 @@
 export class Product {
-    descriptions: Description[];
+    descriptions: Description[] = new Array();
     properties: Property[];
     categories: Category[];
     type: string;
     manufacturer: string = "DEFAULT";
     price: number;
-    visible: boolean;
+    visible: boolean = true;
     shipeable: boolean;
     virtual: boolean;
     canBePurchased: boolean;
-    dateAvailable: string;
+    dateAvailable: string = (new Date()).toISOString();
     identifier: string;
     productSpecifications: ProductSpecification;
-    sortOrder:number;
+    sortOrder:number=0;
     quantity:number;
     id:number;
+
+    constructor(obj?: any){
+        this.descriptions.push(new Description(obj))
+        this.price = obj.rrpPrice;
+        this.quantity = obj && Math.trunc(obj.stockQty) || 0;
+        this.identifier = obj.sku;
+    }
 }
 
 export class Description{
+
     name: string;
     description: string;
     friendlyUrl: string;
@@ -26,7 +34,17 @@ export class Description{
     metaDescription: string;
     title: string;
     language: string;
-    id: number;   
+
+    constructor(obj?:any){
+        this.name = obj.title;
+        this.description = obj.desc;
+        this.friendlyUrl = obj.websiteUrl;
+        this.keyWords = "";
+        this.highlights = "";
+        this.metaDescription = "";
+        this.title = obj.title;
+        this.language = "en";
+    }
 }
 
 export class Property{

@@ -8,16 +8,19 @@
 
       <form class="form-inline filter_section">
         <div class="filter_left_section">
-          <button (click)="showRemoteProducts()">Import Product</button>
+          <button [disabled]="products.length != 0" style="margin-right:20px" nbButton status="primary" (click)="importRemoteProducts()">Import Products</button>
+          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="danger" (click)="removeAllProducts()">Clear Products</button>
+          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="warning" (click)="scrambleProductDetails()">Scramble Details</button>         
         </div>
+        
         <div class="filter_right_section">
           <!-- <ngx-store-autocomplete (onStore)="choseStore($event)"></ngx-store-autocomplete> -->
 
-            <a class="createBtn" [routerLink]="['/pages/catalogue/products/create-product']">
+            <!-- <a class="createBtn" [routerLink]="['/pages/catalogue/products/create-product']">
               <img class="pointer sda add" src="../../../../assets/img/plus.png" title="{{ 'COMPONENTS.CREATE_PRODUCT' | translate}}"
                 alt="">
               <label>{{ 'COMPONENTS.CREATE_PRODUCT' | translate}}</label>
-            </a>
+            </a> -->
         </div>
       </form>
 

@@ -718,6 +718,13 @@ ng2-st-tbody-custom {
                 }
               }
 
+              .nb-loop-circled {
+                &:before {
+                  font-size: 24px !important;
+                  color: #00ff6a;
+                }
+              }
+
               .nb-trash {
                 &:before {
                   font-size: 24px !important;
@@ -925,7 +932,7 @@ ng2-st-tbody-custom {
   width: 100%;
 
   .filter_left_section {
-    width: 50%;
+    width: 100%;
 
     .sda {
       height: 18px;

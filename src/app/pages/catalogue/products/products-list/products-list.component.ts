@@ -12,6 +12,9 @@ import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { ListingService } from '../../../shared/services/listing.service';
 import { CrudService } from '../../../shared/services/crud.service';
+import { Product } from '../models/product.model';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/forkJoin';
 
 
 @Component({
@@ -29,7 +32,7 @@ export class ProductsListComponent implements OnInit {
   isSuperadmin: boolean;
   selectedStore: String = '';
   // paginator
-  perPage = 15;
+  perPage = 40;
   currentPage = 1;
   totalCount;
   merchant;
@@ -54,12 +57,116 @@ export class ProductsListComponent implements OnInit {
     this.listingService = new ListingService();
   }
 
-  showRemoteProducts(){
-    console.log("remote")
-    this.crudService.getRemoteProducts().subscribe(response=>{
-      console.log(response[0])
+  removeAllProducts(){
+    let rmTsks$ = [];
+    this.products.forEach(product=>{
+      let rmTsk$ = this.productService.deleteProduct(product.id);
+      rmTsks$.push(rmTsk$);
+    })
+
+    Observable.forkJoin(rmTsks$).subscribe(result=>{
+      this.toastr.success("Products Removed Successfully")
+      this.getList();
     })
   }
+
+  importRemoteProducts(){
+    console.log("remote")
+    this.loadingList = true;
+    const numberOfProduct = 40;
+    this.crudService.getRemoteProducts(numberOfProduct).subscribe(
+      response=>{
+        let tasks$ = [];
+
+        response.forEach(e=>{
+          let newProd = new Product(e);
+          let newTask$ = this.productService.createProduct(newProd);
+          tasks$.push(newTask$);         
+        })
+
+        Observable.forkJoin(tasks$).subscribe(result=>{
+          console.log("finish")
+          this.toastr.success("Import Sample Products From DRZ");
+          this.getList();
+          this.loadingList = false;
+        })
+      }
+    )
+    
+  }
+
+  scrambleProductDetails(){
+    this.loadingList = true;
+    let updateTsks$ = [];
+    this.products.forEach(target=>{
+      let source = this.scrambleTarget(target);
+      let updateTsk$ = this.tskToUpdateProductDetail(target, source);
+      updateTsks$.push(updateTsk$);
+    })
+   
+    Observable.forkJoin(updateTsks$).subscribe(result=>{
+      console.log("finish")
+      this.toastr.success("Scramble Done");
+      this.getList();
+      this.loadingList = false;
+    })
+  }
+
+  private scrambleTarget(target){
+    let source = target;
+    source.price = target.price + (Math.floor(Math.random() * 10) + 1);
+    source.quantity = target.quantity + (Math.floor(Math.random() * 10) + 1);
+    source.manufacturer = "DEFAULT";
+    source.identifier = target.sku;
+    return source;
+  }
+
+  private tskToUpdateProductDetail(target, source){
+    return this.productService.updateProduct(target.id, source);    
+  }
+
+  syncPrice(e){
+    let sku = e.data.sku;
+    let id = e.data.id;
+console.log(e)
+    this.crudService.getRemoteProductBySku(sku).subscribe(
+      response=>{
+        let rmProduct = new Product(response);
+console.log(rmProduct);
+        let titleTxt = "Sync: '" + rmProduct.identifier + "' With DRZ"
+        let priceText = "";
+        let qtyText = "";
+
+        if(e.data.price == rmProduct.price && e.data.quantity == rmProduct.quantity){
+          titleTxt = ""
+          priceText = "Information is up to date, no actions required"
+          qtyText = "";
+        } else{
+          if(e.data.price != rmProduct.price){
+            priceText = "Price changed from : " + e.data.price + " to : " + rmProduct.price;
+          }
+          
+          if(e.data.quantity != rmProduct.quantity){
+            qtyText = "Quantity changed from : " + e.data.quantity + " to : " + rmProduct.quantity;
+          }
+        }
+        
+        this.dialogService.open(ShowcaseDialogComponent, { context:{title: titleTxt, actionText: priceText, text: qtyText} })
+        .onClose.subscribe(res => {
+          if (res) {
+            this.productService.updateProduct(id, rmProduct)
+              .subscribe(result => {
+                this.toastr.success("Data Sync Completed");
+                this.getList();
+                // event.confirm.resolve();
+              });
+          } else {}
+        });
+      }
+    )
+  }
+
+  
     
   loadParams() {
     return {
@@ -144,7 +251,8 @@ export class ProductsListComponent implements OnInit {
         position: 'right',
         sort: true,
         custom: [
-          { name: 'edit', title: '<i class="nb-edit"></i>' },
+          // { name: 'edit', title: '<i class="nb-edit"></i>' },
+          { name: 'sync', title: '<i class="nb-loop-circled"></i>' },
           { name: 'remove', title: '<i class="nb-trash"></i>' }
         ],
       },
@@ -152,12 +260,12 @@ export class ProductsListComponent implements OnInit {
         display: false
       },
       columns: {
-        id: {
-          title: this.translate.instant('COMMON.ID'),
-          type: 'number',
-          editable: false,
-          filter: false
-        },
+        // id: {
+        //   title: this.translate.instant('COMMON.ID'),
+        //   type: 'number',
+        //   editable: false,
+        //   filter: false
+        // },
         sku: {
           title: this.translate.instant('PRODUCT.SKU'),
           type: 'string',
@@ -170,12 +278,6 @@ export class ProductsListComponent implements OnInit {
           filter: true,
           editable: false
         },
-        quantity: {
-          title: this.translate.instant('PRODUCT.QTY'),
-          type: 'number',
-          editable: true,
-          filter: false
-        },
         available: {
           filter: false,
           title: this.translate.instant('COMMON.AVAILABLE'),
@@ -186,6 +288,12 @@ export class ProductsListComponent implements OnInit {
           editor: {
             type: 'checkbox'
           }
+        },
+        quantity: {
+          title: this.translate.instant('PRODUCT.QTY'),
+          type: 'number',
+          editable: true,
+          filter: false
         },
         price: {
           title: this.translate.instant('PRODUCT.PRICE'),
@@ -220,7 +328,7 @@ export class ProductsListComponent implements OnInit {
   }
 
   deleteRecord(event) {
-    this.dialogService.open(ShowcaseDialogComponent, {})
+    this.dialogService.open(ShowcaseDialogComponent, { context:{title: "Confirm to remove the product", actionText: "Do you want to remove this product?"} })
       .onClose.subscribe(res => {
         if (res) {
           this.productService.deleteProduct(event.data.id)
@@ -266,12 +374,19 @@ export class ProductsListComponent implements OnInit {
     }
     this.getList();
   }
+
   route(e) {
-    //console.log(e)
+    // console.log(e)
     if (e.action == 'remove') {
       this.deleteRecord(e)
-    } else {
+    } 
+    else if(e.action == 'sync'){
+      this.syncPrice(e);
+    } 
+    else {
       this.router.navigate(['pages/catalogue/products/product/' + e.data.id]);
     }
   }
+
+  
 }
