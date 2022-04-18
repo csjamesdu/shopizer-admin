@@ -8,9 +8,10 @@
 
       <form class="form-inline filter_section">
         <div class="filter_left_section">
-          <button [disabled]="products.length != 0" style="margin-right:20px" nbButton status="primary" (click)="importRemoteProducts()">Import Products</button>
-          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="danger" (click)="removeAllProducts()">Clear Products</button>
-          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="warning" (click)="scrambleProductDetails()">Scramble Details</button>         
+          <button [hidden]="products.length != 0" style="margin-right:20px" nbButton status="primary" (click)="importRemoteProducts()">Import Products</button>
+          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="danger" (click)="confirmToClearAllProducts()">Clear Products</button>
+          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="warning" (click)="confirmToScrambleProductDetails()">Scramble Details</button>  
+          <button [disabled]="products.length == 0" style="margin-right:20px" nbButton status="success" (click)="confirmToSync()">Sync Details</button>       
         </div>
         
         <div class="filter_right_section">

@@ -18,6 +18,10 @@ export class CrudService {
 
   constructor(private http: HttpClient) { }
 
+  getRemoteProductsBySkus(skus: any): Observable<any> {
+    return this.http.get(this.myUrl + "drzData/getProductsBySkus/" + skus);
+  }
+
   getRemoteProductBySku(sku: any): Observable<any> {
     return this.http.get(this.myUrl + "drzData/getProductBySku/" + sku);
   }

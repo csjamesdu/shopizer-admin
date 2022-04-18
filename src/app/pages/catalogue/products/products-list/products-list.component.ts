@@ -57,19 +57,6 @@ export class ProductsListComponent implements OnInit {
     this.listingService = new ListingService();
   }
 
-  removeAllProducts(){
-    let rmTsks$ = [];
-    this.products.forEach(product=>{
-      let rmTsk$ = this.productService.deleteProduct(product.id);
-      rmTsks$.push(rmTsk$);
-    })
-
-    Observable.forkJoin(rmTsks$).subscribe(result=>{
-      this.toastr.success("Products Removed Successfully")
-      this.getList();
-    })
-  }
-
   importRemoteProducts(){
     console.log("remote")
     this.loadingList = true;
@@ -93,6 +80,43 @@ export class ProductsListComponent implements OnInit {
       }
     )
     
+  }
+
+  confirmToClearAllProducts(){
+    let titleTxt = "Clear All Available Products"
+    let priceText = "Confirm to remove all available products!"
+
+    this.dialogService.open(ShowcaseDialogComponent, { context:{title: titleTxt, actionText: priceText} })
+    .onClose.subscribe(res => {
+      if (res) {
+        this.removeAllProducts();
+      } else {}
+    });
+  }
+
+  removeAllProducts(){
+    let rmTsks$ = [];
+    this.products.forEach(product=>{
+      let rmTsk$ = this.productService.deleteProduct(product.id);
+      rmTsks$.push(rmTsk$);
+    })
+
+    Observable.forkJoin(rmTsks$).subscribe(result=>{
+      this.toastr.success("Products Removed Successfully")
+      this.getList();
+    })
+  }
+
+  confirmToScrambleProductDetails(){
+    let titleTxt = "Scramble Details of All Available Products"
+    let priceText = "Confirm to increase the 'Qty' and 'Price' of each product with a random number from 1 to 10"
+
+    this.dialogService.open(ShowcaseDialogComponent, { context:{title: titleTxt, actionText: priceText} })
+    .onClose.subscribe(res => {
+      if (res) {
+        this.scrambleProductDetails();
+      } else {}
+    });
   }
 
   scrambleProductDetails(){
@@ -125,7 +149,39 @@ export class ProductsListComponent implements OnInit {
     return this.productService.updateProduct(target.id, source);    
   }
 
-  syncPrice(e){
+  confirmToSync(){
+    let titleTxt = "Sync All Available Data With DRZ"
+    let priceText = "Confirm to synchronize all available data!"
+
+    this.dialogService.open(ShowcaseDialogComponent, { context:{title: titleTxt, actionText: priceText} })
+    .onClose.subscribe(res => {
+      if (res) {
+        this.syncProductDetails();
+      } else {}
+    });
+  }
+
+  syncProductDetails(){
+    let skus =  this.products.map(p=>p.sku).join(",");
+    let updTsks$ = [];
+    this.loadingList = true;
+    this.crudService.getRemoteProductsBySkus(skus).subscribe(response=>{
+      response.productList.forEach(rmp=>{
+        let rmProduct = new Product(rmp);
+        let product = this.products.find(p=>p.sku==rmp.sku)
+        let updTsk$ = this.productService.updateProduct(product.id, rmProduct)
+        updTsks$.push(updTsk$);
+      })
+
+      Observable.forkJoin(updTsks$).subscribe(result=>{
+        this.toastr.success("Sync Done");
+        this.getList();
+        this.loadingList = false;
+      })
+    })   
+  }
+
+  syncSingleData(e){
     let sku = e.data.sku;
     let id = e.data.id;
 console.log(e)
@@ -381,7 +437,7 @@ console.log(rmProduct);
       this.deleteRecord(e)
     } 
     else if(e.action == 'sync'){
-      this.syncPrice(e);
+      this.syncSingleData(e);
     } 
     else {
       this.router.navigate(['pages/catalogue/products/product/' + e.data.id]);
